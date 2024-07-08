@@ -21,7 +21,7 @@ sudo apachectl start
 ####################
 #auf VM
 ####################
-
+#prüfen ob apachectl läuft bevor aktivierung
 
 apachectl status  #man braucht mod-status um den status abzurufen :/
 if[$? -ne 1]  #$? = exit code of recent command; 1 = failed??; 0 = sucess??; -> if apache not on then start start it; -ne = not equal
@@ -53,5 +53,5 @@ utmctl start lmswClone
 
 open vnc://lmsw:lmsw@lmsws-Virtual-Machine.local #verbindet sich mithilfe von Screen Sharing mit der VM #vnc://user:password@hostname[:port]
 
-utmctl start lmsw #danach starten, damit locales Repo sich mit dem Prod. Repo updaten kann?? 
+utmctl start lmsw #danach starten, damit locales Repo sich mit dem Prod. Repo updaten kann??  
 
