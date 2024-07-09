@@ -28,6 +28,14 @@ hostname="${name}s-Virtual-Machine.local"       ##different hostname structure f
 #Opens UTM
 open /Applications/UTM.app/
 
+        ###Template importieren, da hostname über .local läuft?
+#Downloads the newest template version and opens it in UTM
+###wget command evtl
+#cp remoteserver///Library/Containers/UTM/Data/Documents/${name}.utm ~/Library/Containers/UTM/Data/Documents         ### Remote server connection muss bestehen
+### mv ~/Downloads/${name}.utm ~/Library/Containers/UTM/Data/Documents/${name}.utm 
+### utmctl open ~/Library/Containers/UTM/Data/Documents/${name}.utm     #wird durch mv richtig abgelegt und später gestartet
+
+
 #Stops the template VM if it is running
 if [[ $(utmctl status $name)=="started" ]]
 then
