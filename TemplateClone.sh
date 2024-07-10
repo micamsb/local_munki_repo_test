@@ -1,6 +1,6 @@
 #!/bin/zsh --no-rcs
 
-#creates a folder structure; connects to the dev repo; clones a VM from template and starts it
+#clones a template VM in UTM
 #run on local machine with UTM installed and Template VM imported
 
 ##template VM    name: lmsw    user: lmsw    password: lmsw   language: en    hostname: lmsws-Virtual-Machine.local
@@ -11,12 +11,12 @@ name="lmsw"
 user="lmsw"
 password="lmsw"
 hostname="${name}s-Virtual-Machine.local"       #different hostname pattern for different languages!
-#language="en"
+language="en"
 
 
 #   functions   #
-function activate_utmctl (){        #braucht man das überhaupt?
-    /Applications/UTM.app/Contents/MacOS/utmctl
+function activate_utmctl (){
+    #/Applications/UTM.app/Contents/MacOS/utmctl
     sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
 }
 
@@ -30,7 +30,7 @@ function open_utm(){
     fi
 }
 
-function import_templateVM (){  #Downloads the newest template version     ################# 
+function import_templateVM (){  # ... 
     scp [username]@[remote_ip]:/file/to/send/${name}.utm ~/Library/Containers/UTM/Data/Documents
     ###wget command evtl
     #cp remoteserver///Library/Containers/UTM/Data/Documents/${name}.utm ~/Library/Containers/UTM/Data/Documents         ### Remote server connection muss bestehen
@@ -68,7 +68,7 @@ function update_templateVM (){  #starts the template VM to update it with the pr
     utmctl exec --input     #... 
 }
 
-function delete_VMcopy (){   #stops and deletes cloned VM?? ...  #sonst entstehen immer mehr kopien die veraltet sind; dürfte erst ausgefürt werden wenn man fertig ist (automatisches skript das jede woche läuft?)
+function delete_VMcopy (){   #stops and deletes cloned VM?? ...  
     if [[ $(utmctl status ${name}_clone)=="started" ]]
     then    
         utmctl stop ${name}_clone
@@ -98,3 +98,4 @@ share_screen
 
 #delete_VMcopy
 
+echo "Script completed."
