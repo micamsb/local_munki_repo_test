@@ -1,7 +1,18 @@
 #!/bin/zsh --no-rcs
 
-#run on template VM
-#language of template VM: en (different hostnames for different languages)
+#creates a folder structure; connects to the dev repo; clones a VM from template and starts it
+#run on local machine with UTM installed and Template VM imported
+
+##template VM    name: lmsw    user: lmsw    password: lmsw   language: en    hostname: lmsws-Virtual-Machine.local
+
+
+#   variables   #
+name="lmsw"
+user="lmsw"
+password="lmsw"
+hostname="${name}s-Virtual-Machine.local"       #different hostname pattern for different languages!
+#language="en"
+
 
 #   functions   #
 function create_folder_structure (){
@@ -20,21 +31,37 @@ function create_folder_structure (){
 }
 
 function start_apachectl (){
-    if [$(launchctl print system/org.apache.httpd) -ne 0]   ### Fehlermeldung beim ersten ausführen -> apache wird nicht gestartet
+    launchctl print system/org.apache.httpd 
+
+    if [ $? -eq 0 ]
     then
+        sleep .2
+    else 
         sudo apachectl start
     fi
 }
 
-function activate_screen_sharing (){    #activate screen sharing permission
+function activate_utmctl (){        #braucht man das überhaupt?
+    /Applications/UTM.app/Contents/MacOS/utmctl
+    sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
+}
+
+function open_utm(){
+    if ps -A | grep -v grep | grep -iq 'utm.app'
+    then 
+        sleep .2
+    else 
+        open /Applications/UTM.app/
+        sleep .5
+    fi
+}
+
+function activate_screen_sharing (){    #activate screen sharing permission     #manuell auf Template?
     sudo defaults write /var/db/launchd.db/com.apple.launchd/overrides.plist com.apple.screensharing -dict Disabled -bool false 
     sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.screensharing.plist
 }       ### macht noch probleme -> muss in den   System Settings >  Sharing > Screen Sharing     nochmal manuell deaktiviert und reaktiviert werden
 
-#shared diretory damit man auf das dev Repository zugreifen kann
-# mit utmctl möglich?
-
-function changeto_munki_dev_repo (){    #braucht man nicht wenn shared directory funktioniert
+function changeto_munki_dev_repo (){ 
     sudo defaults write \
     /Library/Preferences/ManagedInstalls.plist \
     ManifestURL \
@@ -46,19 +73,73 @@ function changeto_munki_dev_repo (){    #braucht man nicht wenn shared directory
     "https://its-cs-munki-test-01.its.unibas.ch/munki_repo_dev"
 }
 
-function update_repo (){
+function update_repo (){    #sollte immer wieder laufen z.B. täglich
     autopkg repo-update all
-    sleep 3
+    sleep .5
 }
 
-##Managed Software Center
-##Munki Admin - dav.its-cs-munki-test-01.its.unibas.ch
+function enable_shared_directory (){    #damit man auf das dev Repository zugreifen kann   #manuell für Template auf UTM?
+    utmctl new_shared_directory ${name}_clone dav.its-cs-munki-test-01.its.unibas.ch/files/html/munki_repo_dev
+}
+
+function stop_templateVM (){
+    if [[ $(utmctl status $name)=="started" ]]
+    then
+        utmctl stop $name
+        sleep .2
+    fi
+}
+
+function clone_templateVM (){
+    utmctl clone $name --name ${name}_clone 
+    sleep .2
+}
+
+function launch_VMcopy (){
+   utmctl start ${name}_clone
+    sleep .15 
+}
+
+function share_screen (){
+    open vnc://$user:$password@$hostname        # vnc://[user]:[password]@[hostname]:[port]     #port not required? (port=5900 ?)
+}       ### Man muss sich dann noch in der VM einloggen -> noch kein command dafür gefunden
+
+function delete_VMcopy(){   #stops and deletes cloned VM?? ...  #sonst entstehen immer mehr kopien die veraltet sind; dürfte erst ausgefürt werden wenn man fertig ist (automatisches skript das jede woche läuft?)
+    if [[ $(utmctl status ${name}_clone)=="started" ]]
+    then    
+        utmctl stop ${name}_clone
+        sleep .5
+    fi
+
+    utmctl delete ${name}_clone
+}
 
 
 #   script    #
-create_folder_structure
+create_folder_structure        #nur ein mal nötig                  #~zeitlich           #funktioniert
 
-start_apachectl
+start_apachectl                 #auf VM?                            #räumlich           #funktioniert aber grosser output der nicht direkt gebraucht wird
 
-activate_screen_sharing
+#activate_utmctl                #unnötig / nur ein mal nötig                            #
 
+open_utm                                                                                #funktioniert
+
+#activate_screen_sharing        #funktioniert nur manuel auf VM     #räumlich           #bug
+
+#changeto_munki_dev_repo                                                                #
+
+#update_repo                                                                            #geht nicht
+
+#enable_shared_directory        #funktioniert nur manuel auf UTM    #räumlich           #geht nicht
+
+stop_templateVM                                                                         #funktioniert
+
+clone_templateVM                                                                        #funktioniert
+
+launch_VMcopy                                                                           #funktioniert
+
+share_screen                                                                            #funktioniert
+
+#delete_VMcopy                  #erst ganz am schluss               #zeitlich           #
+
+echo "Script completed."
