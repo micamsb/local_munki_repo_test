@@ -5,28 +5,30 @@
 
 ##template VM    name: lmsw    user: lmsw    password: lmsw   language: en    hostname: lmsws-Virtual-Machine.local
 
-#Variabeln
+
+#   variables   #
 name="lmsw"
 user="lmsw"
 password="lmsw"
-hostname="${name}s-Virtual-Machine.local"       ##different hostname structure for different languages!
+hostname="${name}s-Virtual-Machine.local"       #different hostname pattern for different languages!
 #language="en"
 
-##########      #würde so nicht funktionieren aber auch nicht wirklich relevant für uns
-#if[$language="en"]
-#    hostname="${name}s-Virtual-Machine.local"
-#fi
-#if[$language="de"]
-#    hostname="Virtuelle-Maschine-von-$name.local"
-#fi
-##########
 
+#   functions   #
+function activate_utmctl (){
+    /Applications/UTM.app/Contents/MacOS/utmctl
+    sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
+}
 
-#/Applications/UTM.app/Contents/MacOS/utmctl
-#sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
-
-#Opens UTM
-open /Applications/UTM.app/
+function open_utm(){
+    if ps -A | grep -v grep | grep -iq 'utm.app'
+    then 
+        sleep 2
+    else 
+        open /Application/UTM.app/
+        sleep 5
+    fi
+}
 
         ###Template importieren, da hostname über .local läuft?
 #Downloads the newest template version and opens it in UTM
@@ -35,29 +37,57 @@ open /Applications/UTM.app/
 ### mv ~/Downloads/${name}.utm ~/Library/Containers/UTM/Data/Documents/${name}.utm 
 ### utmctl open ~/Library/Containers/UTM/Data/Documents/${name}.utm     #wird durch mv richtig abgelegt und später gestartet
 
+function stop_templateVM (){
+    if [[ $(utmctl status $name)=="started" ]]
+    then
+        utmctl stop $name
+        sleep 2
+    fi
+}
 
-#Stops the template VM if it is running
-if [[ $(utmctl status $name)=="started" ]]
-then
-    utmctl stop $name
-fi
+function clone_templateVM (){
+    utmctl clone $name --name ${name}_clone 
+    sleep 2
+}
 
-#Clones and starts new VM
-utmctl clone $name --name ${name}_clone 
-utmctl start ${name}_clone
-sleep .15
+function launch_VMcopy (){
+   utmctl start ${name}_clone
+    sleep 5 
+}
 
-#creates a screen sharing connection with the VM using VNC
-open vnc://$user:$password@$hostname        ## vnc://[user]:[password]@[hostname]:[port]     #port not required? (port=5900 ?)
-### Man muss sich dann noch in der VM einloggen -> noch kein command dafür gefunden
+function share_screen (){
+    open vnc://$user:$password@$hostname        # vnc://[user]:[password]@[hostname]:[port]     #port not required? (port=5900 ?)
+}       ### Man muss sich dann noch in der VM einloggen -> noch kein command dafür gefunden
+
+function update_templateVM (){  #starts the template VM to update it with the productive repo?? ...
+    if [[ $(utmctl status $name)=="stopped" ]]
+    then    
+        utmctl start $name
+        sleep 5
+    fi
+
+    utmctl exec --input     #... 
+}
+
+function delete_VMcopy(){   #stops and deletes cloned VM?? ...  #sonst entstehen immer mehr kopien die veraltet sind; dürfte erst ausgefürt werden wenn man fertig ist (automatisches skript das jede woche läuft?)
+    if [[ $(utmctl status ${name}_clone)=="started" ]]
+    then    
+        utmctl stop ${name}_clone
+        sleep 5
+    fi
+
+    utmctl delete ${name}_clone
+}
 
 
-##starts the template VM to update it with the productive repo?? ...
-#utmctl start $name 
-#utmctl exec --input    #...
+#   script  #
+open_utm
 
-##stops and deletes cloned VM?? ...
-#utmcl stop ${name}_clone
-#utmctl delete ${name}_clone
-    ### sonst entstehen immer mehr kopien die eigentlich nicht mehr gebraucht werden
-    ### darf erst ausgefürt werden wenn man fertig ist -> Im hintergrund laufen lassen bis z.B. 3h idle modus   oder Zweites, automatisiertes skript das jeden morgen läuft und die alten VMs löscht?
+stop_templateVM
+
+clone_templateVM
+
+launch_VMcopy
+
+share_screen
+
