@@ -1,7 +1,7 @@
 #!/bin/zsh --no-rcs
 
 #creates a folder structure; connects to the dev repo; clones a VM from template and starts it
-#run on local machine with UTM installed and Template VM imported
+#run on local machine with UTM installed and Template VM imported (works only if the correct variables are used in template)
 
 ##template VM    name: lmsw    user: lmsw    password: lmsw   language: en    hostname: lmsws-Virtual-Machine.local
 
@@ -42,7 +42,7 @@ function start_apachectl (){
 }
 
 function activate_utmctl (){        #braucht man das überhaupt?
-    /Applications/UTM.app/Contents/MacOS/utmctl
+    #/Applications/UTM.app/Contents/MacOS/utmctl
     sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
 }
 
@@ -90,6 +90,25 @@ function stop_templateVM (){
     fi
 }
 
+function delete_VMcopy (){
+    if [[ $(utmctl status ${name}_clone)=="started" ]]
+    then    
+        utmctl stop ${name}_clone
+        sleep .5
+    fi
+
+    utmctl delete ${name}_clone
+}
+
+function check_delete_existing_VMcopy (){  
+    utmctl list | grep ${name}_clone
+
+    if [ $? -eq 0 ]
+    then
+        delete_VMcopy
+    fi
+}
+
 function clone_templateVM (){
     utmctl clone $name --name ${name}_clone 
     sleep .2
@@ -104,42 +123,34 @@ function share_screen (){
     open vnc://$user:$password@$hostname        # vnc://[user]:[password]@[hostname]:[port]     #port not required? (port=5900 ?)
 }       ### Man muss sich dann noch in der VM einloggen -> noch kein command dafür gefunden
 
-function delete_VMcopy(){   #stops and deletes cloned VM?? ...  #sonst entstehen immer mehr kopien die veraltet sind; dürfte erst ausgefürt werden wenn man fertig ist (automatisches skript das jede woche läuft?)
-    if [[ $(utmctl status ${name}_clone)=="started" ]]
-    then    
-        utmctl stop ${name}_clone
-        sleep .5
-    fi
 
-    utmctl delete ${name}_clone
-}
+#   script    #                 #Info                                       #trennung           #status
+create_folder_structure         #nur ein mal nötig                          #~zeitlich          #funktioniert (auch wenn man die funktion öfter ausführt)
 
+start_apachectl                 #auf VM?                                    #räumlich           #funktioniert aber grosser output der nicht direkt gebraucht wird
 
-#   script    #
-create_folder_structure        #nur ein mal nötig                  #~zeitlich           #funktioniert
+activate_utmctl                 #unnötig / nur ein mal nötig                                    #funktioniert
 
-start_apachectl                 #auf VM?                            #räumlich           #funktioniert aber grosser output der nicht direkt gebraucht wird
+open_utm                                                                                        #funktioniert
 
-#activate_utmctl                #unnötig / nur ein mal nötig                            #
+#activate_screen_sharing         #funktioniert nur manuel auf VM             #räumlich            #bug
 
-open_utm                                                                                #funktioniert
+changeto_munki_dev_repo                                                                         #funktioniert
 
-#activate_screen_sharing        #funktioniert nur manuel auf VM     #räumlich           #bug
+update_repo                     #unnötig?                                                       #funktioniert
 
-#changeto_munki_dev_repo                                                                #
+#enable_shared_directory         #funktioniert nur manuel auf UTM            #räumlich           #geht nicht
 
-#update_repo                                                                            #geht nicht
+stop_templateVM                                                                                 #funktioniert
 
-#enable_shared_directory        #funktioniert nur manuel auf UTM    #räumlich           #geht nicht
+#delete_VMcopy                   #in check_existing_VMcopy implementiert     #zeitlich?          #funktioniert in check_delete_existing_VMcopy
 
-stop_templateVM                                                                         #funktioniert
+check_delete_existing_VMcopy    #löscht kopie falls eine existiert          #                   #funktioniert
 
-clone_templateVM                                                                        #funktioniert
+clone_templateVM                                                                                #funktioniert
 
-launch_VMcopy                                                                           #funktioniert
+launch_VMcopy                                                                                   #funktioniert
 
-share_screen                                                                            #funktioniert
-
-#delete_VMcopy                  #erst ganz am schluss               #zeitlich           #
+share_screen                                                                                    #funktioniert
 
 echo "Script completed."
