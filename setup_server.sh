@@ -11,8 +11,9 @@ name="lmsw"
 user="lmsw"
 password="lmsw"
 hostname="${name}s-Virtual-Machine.local"       #different hostname pattern for different languages!
-#language="en"
-
+language="en"
+clone_suffix="clone"
+suffix=$clone_suffix
 
 #   functions   #
 function create_folder_structure (){
@@ -41,7 +42,7 @@ function start_apachectl (){
     fi
 }
 
-function activate_utmctl (){        #braucht man das überhaupt?
+function activate_utmctl (){ 
     #/Applications/UTM.app/Contents/MacOS/utmctl
     sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
 }
@@ -56,7 +57,7 @@ function open_utm(){
     fi
 }
 
-function activate_screen_sharing (){    #activate screen sharing permission     #manuell auf Template?
+function activate_screen_sharing (){
     sudo defaults write /var/db/launchd.db/com.apple.launchd/overrides.plist com.apple.screensharing -dict Disabled -bool false 
     sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.screensharing.plist
 }       ### macht noch probleme -> muss in den   System Settings >  Sharing > Screen Sharing     nochmal manuell deaktiviert und reaktiviert werden
@@ -73,13 +74,13 @@ function changeto_munki_dev_repo (){
     "https://its-cs-munki-test-01.its.unibas.ch/munki_repo_dev"
 }
 
-function update_repo (){    #sollte immer wieder laufen z.B. täglich
+function update_repo (){
     autopkg repo-update all
     sleep .5
 }
 
-function enable_shared_directory (){    #damit man auf das dev Repository zugreifen kann   #manuell für Template auf UTM?
-    utmctl new_shared_directory ${name}_clone dav.its-cs-munki-test-01.its.unibas.ch/files/html/munki_repo_dev
+function enable_shared_directory (){
+    utmctl new_shared_directory ${name} dav.its-cs-munki-test-01.its.unibas.ch/files/html/munki_repo_dev
 }
 
 function stop_templateVM (){
@@ -91,17 +92,17 @@ function stop_templateVM (){
 }
 
 function delete_VMcopy (){
-    if [[ $(utmctl status ${name}_clone)=="started" ]]
+    if [[ $(utmctl status ${name}_${suffix})=="started" ]]
     then    
-        utmctl stop ${name}_clone
+        utmctl stop ${name}_${suffix}
         sleep .5
     fi
 
-    utmctl delete ${name}_clone
+    utmctl delete ${name}_${suffix}
 }
 
 function check_delete_existing_VMcopy (){  
-    utmctl list | grep ${name}_clone
+    utmctl list | grep ${name}_${suffix}
 
     if [ $? -eq 0 ]
     then
@@ -110,12 +111,12 @@ function check_delete_existing_VMcopy (){
 }
 
 function clone_templateVM (){
-    utmctl clone $name --name ${name}_clone 
+    utmctl clone $name --name ${name}_${suffix} 
     sleep .2
 }
 
 function launch_VMcopy (){
-   utmctl start ${name}_clone
+   utmctl start ${name}_${suffix}
     sleep .15 
 }
 
@@ -139,7 +140,7 @@ changeto_munki_dev_repo                                                         
 
 update_repo                     #unnötig?                                                       #funktioniert
 
-#enable_shared_directory         #funktioniert nur manuel auf UTM            #räumlich           #geht nicht
+#enable_shared_directory         #funktioniert nur manuel auf UTM            #räumlich           #geht nicht        #wichtig
 
 stop_templateVM                                                                                 #funktioniert
 
