@@ -102,12 +102,13 @@ function delete_VMcopy (){
 }
 
 function check_delete_existing_VMcopy (){  
-    utmctl list | grep ${name}_${suffix}
-
-    if [ $? -eq 0 ]
-    then
-        delete_VMcopy
-    fi
+    while ( utmctl list | grep ${name}_${suffix} )
+    do
+        if [ $? -eq 0 ]
+        then
+            delete_VMcopy
+        fi
+    done
 }
 
 function clone_templateVM (){
