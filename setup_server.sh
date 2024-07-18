@@ -9,9 +9,9 @@
 #Start VM
 #Set language according to variable
 #Set username and password according to variable
-#Activate screen sharing permission at: System Settings > Sharing > Screen Sharing
+#Activate screen sharing permission at: System Settings > General > Sharing > Screen Sharing
 #Open search machine and enroll JAMF with following link: https://its-mcs-dm.its.unibas.ch:8443/enroll/
-    #Wait until completion & follow instructions if needed
+    #Wait until completion & follow instructions if needed (also review the MDM Profile in System Settings > Profiles)
 #Restart VM and follow instructions if needed
 #Copy the serial number (to create a Manifest in MunkiAdmin)
 
@@ -25,17 +25,19 @@ password="lmsw"
 language="en"                                   #different hostname pattern for different languages!    #Options: en / de
 clone_suffix="clone"
 suffix=$clone_suffix
+hostname="${name}s-Virtual-Machine.local"
+ip_adress="192.168.64.12"
 
 ###
-if [ $language=="en" ]
-then    
-    hostname="${name}s-Virtual-Machine.local"
-fi
-
-if [ $language=="de" ]
-then
-    hostname="Virtuelle-Maschine-von-${name}.local"
-fi
+#if [ $language=="en" ]
+#then    
+#    hostname="${name}s-Virtual-Machine.local"
+#fi
+#
+#if [ $language=="de" ]
+#then
+#    hostname="Virtuelle-Maschine-von-${name}.local"
+#fi
 ###
 
 #   functions   #
@@ -125,8 +127,14 @@ function JAMF_enrollment (){            ###manuell einrichten
 }
 
 function find_serial_number (){         ###manuell? error Operation not supported by the backend.
-    IP_adress=[ utmctl ip_address $name ]
-    echo $IP_adress
+    serial_no=[ utmctl ip_address $name ]       ##gibt das die ip oder serial?
+    echo “$serial_no“
+}
+
+function find_ip_adress (){
+    IP_adress=[ utmctl ip_adress $name ]
+    #IP_adress=[ ipconfig getifaddr en0 ]
+    echo "$IP_adress"
 }
 
 function enable_shared_directory (){
@@ -172,22 +180,22 @@ function launch_VMcopy (){
 }
 
 function share_screen (){
-    open vnc://$user:$password@$hostname        # vnc://[user]:[password]@[hostname]:[port]     #port not required? (port=5900 ?)
+    open vnc://${user}:${password}@$hostname       # vnc://[user]:[password]@[server]:[port]     #port not required? (port=5900 ?)
 }       ### Man muss sich dann noch in der VM einloggen -> noch kein command dafür gefunden
 
 
 #   script    #                 #Info                                       #trennung           #status
 #import_templateVM                                                                              #geht nicht (auch nicht erforderlich wenn man template selber einrichtet, nur wenn man sie runterläd)
 
-create_folder_structure         #nur ein mal nötig                          #~zeitlich          #funktioniert (auch wenn man die funktion öfter ausführt)
+#create_folder_structure         #nur ein mal nötig                          #~zeitlich          #funktioniert (auch wenn man die funktion öfter ausführt)
 
-start_apachectl                 #auf VM?                                    #räumlich           #funktioniert aber grosser output der nicht direkt gebraucht wird
+#start_apachectl                 #auf VM?                                    #räumlich           #funktioniert aber grosser output der nicht direkt gebraucht wird
 
-changeto_munki_dev_repo                                                                         #funktioniert
+#changeto_munki_dev_repo                                                                         #funktioniert
 
-update_repo                     #unnötig?                                                       #funktioniert
+#update_repo                     #unnötig?                                                       #funktioniert
 
-activate_utmctl                 #unnötig / nur ein mal nötig                                    #funktioniert
+#activate_utmctl                 #unnötig / nur ein mal nötig                                    #funktioniert
 
 open_utm                                                                                        #funktioniert
 
@@ -198,6 +206,8 @@ open_utm                                                                        
 #JAMF_enrollment                 #manuel auf VM?                             #räumlich           #?
 
 #find_serial_number              #template ID = clone ID                     #zeitlich           #?
+
+#find_ip_adress                                                              #räumlich           #?
 
 #enable_shared_directory         #funktioniert nur manuel auf UTM            #räumlich           #geht nicht        #wichtig
 
@@ -213,4 +223,9 @@ launch_VMcopy                                                                   
 
 share_screen                                                                                    #funktioniert -> bug durch VPN?
 
+
+echo "$hostname"
+echo "$name"
+echo "$user"
+echo "$ip_adress"
 echo "Script completed."
