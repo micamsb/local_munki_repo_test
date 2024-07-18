@@ -106,37 +106,6 @@ function open_utm(){
     fi
 }
 
-function start_templateVM (){
-    if [[ $(utmctl status $name)=="stopped" ]]
-    then
-        utmctl start $name
-        sleep .2
-    fi
-}
-
-function activate_screen_sharing (){
-    #exec??
-    sudo defaults write /var/db/launchd.db/com.apple.launchd/overrides.plist com.apple.screensharing -dict Disabled -bool false 
-    sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.screensharing.plist
-}       ### macht noch probleme -> muss in den   System Settings >  Sharing > Screen Sharing     nochmal manuell deaktiviert und reaktiviert werden
-
-function JAMF_enrollment (){            ###manuell einrichten
-    #exec??
-    utmctl exec open "https://its-mcs-dm.its.unibas.ch:8443/enroll/"
-    sleep 5     #braucht ziemlich lange
-}
-
-function find_serial_number (){         ###manuell? error Operation not supported by the backend.
-    serial_no=[ utmctl ip_address $name ]       ##gibt das die ip oder serial?
-    echo “$serial_no“
-}
-
-function find_ip_adress (){
-    IP_adress=[ utmctl ip_adress $name ]
-    #IP_adress=[ ipconfig getifaddr en0 ]
-    echo "$IP_adress"
-}
-
 function enable_shared_directory (){
     utmctl new_shared_directory ${name} dav.its-cs-munki-test-01.its.unibas.ch/files/html/munki_repo_dev
 }
@@ -184,44 +153,34 @@ function share_screen (){
 }       ### Man muss sich dann noch in der VM einloggen -> noch kein command dafür gefunden
 
 
-#   script    #                 #Info                                       #trennung           #status
-#import_templateVM                                                                              #geht nicht (auch nicht erforderlich wenn man template selber einrichtet, nur wenn man sie runterläd)
+#   script    #
+#import_templateVM      #geht nicht (auch nicht erforderlich wenn man template selber einrichtet, nur wenn man sie runterladen würde)
 
-#create_folder_structure         #nur ein mal nötig                          #~zeitlich          #funktioniert (auch wenn man die funktion öfter ausführt)
+#create_folder_structure        #funktioniert
 
-#start_apachectl                 #auf VM?                                    #räumlich           #funktioniert aber grosser output der nicht direkt gebraucht wird
+#start_apachectl        #funktioniert aber grosser output -> unschön
 
-#changeto_munki_dev_repo                                                                         #funktioniert
+#changeto_munki_dev_repo        #funktioniert
 
-#update_repo                     #unnötig?                                                       #funktioniert
+#update_repo        #funktioniert
 
-#activate_utmctl                 #unnötig / nur ein mal nötig                                    #funktioniert
+#activate_utmctl        #funktioniert
 
-open_utm                                                                                        #funktioniert
+open_utm        #funktioniert
 
-#start_templateVM                #für die nächsten 3 funktionen, sonst manuell ausführen
+#enable_shared_directory        #manuel auf UTM für Template VM        #geht nicht     #wichtig
 
-#activate_screen_sharing         #funktioniert nur manuel auf VM             #räumlich           #bug
+stop_templateVM     #funktioniert
 
-#JAMF_enrollment                 #manuel auf VM?                             #räumlich           #?
+#delete_VMcopy      #funktioniert in check_delete_existing_VMcopy
 
-#find_serial_number              #template ID = clone ID                     #zeitlich           #?
+check_delete_existing_VMcopy        #funktioniert
 
-#find_ip_adress                                                              #räumlich           #?
+clone_templateVM        #funktioniert
 
-#enable_shared_directory         #funktioniert nur manuel auf UTM            #räumlich           #geht nicht        #wichtig
+launch_VMcopy       #funktioniert
 
-stop_templateVM                 #xdo close -a "$name" ?                                         #funktioniert
-
-#delete_VMcopy                   #in check_existing_VMcopy implementiert     #zeitlich?          #funktioniert in check_delete_existing_VMcopy
-
-check_delete_existing_VMcopy    #löscht kopie falls eine existiert          #                   #funktioniert
-
-clone_templateVM                                                                                #funktioniert
-
-launch_VMcopy                                                                                   #funktioniert
-
-share_screen                                                                                    #funktioniert -> bug durch VPN?
+share_screen        #funktioniert -> bug
 
 
 echo "$hostname"
