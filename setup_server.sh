@@ -4,14 +4,15 @@
 
 
 #   Set up template   #
-#New VM with name according to variable
-#Press "New Shared Directory" and choose: dav.its-cs-munki-test-01.its.unibas.ch/files/html/munki_repo_dev
+#New UTM VM with name according to variable
+#Press command k in finder window and connect to: dav.its-cs-munki-test-01.its.unibas.ch/files/
+#Press "New Shared Directory" in UTM and choose: dav.its-cs-munki-test-01.its.unibas.ch/files/html/munki_repo_dev
 #Start VM
-#Set language according to variable
-#Set username and password according to variable
-#Activate screen sharing permission at: System Settings > General > Sharing > Screen Sharing
-#Open search machine and enroll JAMF with following link: https://its-mcs-dm.its.unibas.ch:8443/enroll/
-    #Wait until completion & follow instructions if needed (also review the MDM Profile in System Settings > Profiles)
+    #Set language according to variable
+    #Set username and password according to variable
+    #Activate screen sharing permission at: System Settings > General > Sharing > Screen Sharing
+    #Open search machine and enroll JAMF with following link: https://its-mcs-dm.its.unibas.ch:8443/enroll/
+        #Wait until completion & follow instructions if needed (also review the MDM Profile in System Settings > Profiles)
 #Restart VM and follow instructions if needed
 #Copy the serial number (to create a Manifest in MunkiAdmin)
 
@@ -41,13 +42,6 @@ ip_adress="192.168.64.12"
 ###
 
 #   functions   #
-function import_templateVM (){
-    if [ Downloads/${name}.utm ]
-    then
-        mv Downloads/${name}.utm ~/Library/Containers/com.utmapp.UTM/Data/Documents/
-    fi
-}
-
 function create_folder_structure (){
     SERVER_ROOT=/Users/Shared/munki_repo
 
@@ -91,6 +85,14 @@ function update_repo (){
     sleep .5
 }
 
+function adjust_autopkg (){
+    /usr/local/bin/autopkg run --key MUNKI_REPO="$MUNKI_PROD"       #?
+}
+
+function adjust_munki (){
+    #?
+}
+
 function activate_utmctl (){ 
     #/Applications/UTM.app/Contents/MacOS/utmctl
     sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
@@ -104,10 +106,6 @@ function open_utm(){
         open /Applications/UTM.app/
         sleep .5
     fi
-}
-
-function enable_shared_directory (){
-    utmctl new_shared_directory ${name} dav.its-cs-munki-test-01.its.unibas.ch/files/html/munki_repo_dev
 }
 
 function stop_templateVM (){
@@ -145,7 +143,7 @@ function clone_templateVM (){
 
 function launch_VMcopy (){
    utmctl start ${name}_${suffix}
-    sleep .15
+    sleep .25
 }
 
 function share_screen (){
@@ -154,21 +152,21 @@ function share_screen (){
 
 
 #   script    #
-#import_templateVM      #geht nicht (auch nicht erforderlich wenn man template selber einrichtet, nur wenn man sie runterladen würde)
-
 #create_folder_structure        #funktioniert
 
-#start_apachectl        #funktioniert aber grosser output -> unschön
+start_apachectl        #funktioniert aber grosser output
 
-#changeto_munki_dev_repo        #funktioniert
+changeto_munki_dev_repo        #funktioniert
 
-#update_repo        #funktioniert
+update_repo        #funktioniert
+
+#adjust_autopkg     #manuell, einmalig?
+
+#adjust_munki       #manuell, eimalig?
 
 #activate_utmctl        #funktioniert
 
 open_utm        #funktioniert
-
-#enable_shared_directory        #manuel auf UTM für Template VM        #geht nicht     #wichtig
 
 stop_templateVM     #funktioniert
 
@@ -180,7 +178,7 @@ clone_templateVM        #funktioniert
 
 launch_VMcopy       #funktioniert
 
-share_screen        #funktioniert -> bug
+share_screen        #funktionierte -> bug
 
 
 echo "$hostname"
