@@ -20,14 +20,14 @@
 
 
 #   variables   #
-name="lmsw"
-user="lmsw"
-password="lmsw"
+name="test"
+user="test"
+password="test"
 language="en"                                   #different hostname pattern for different languages!    #Options: en / de
 clone_suffix="clone"
 suffix=$clone_suffix
 hostname="${name}s-Virtual-Machine.local"
-ip_adress="192.168.64.12"
+ip_address="192.168.64.12"
 
 ###
 #if [ $language=="en" ]
@@ -86,11 +86,7 @@ function update_repo (){
 }
 
 function adjust_autopkg (){
-    /usr/local/bin/autopkg run --key MUNKI_REPO="$MUNKI_PROD"       #?
-}
-
-function adjust_munki (){
-    #?
+    /usr/local/bin/autopkg run --key MUNKI_REPO=“/Volumes/MUNKI_PROD“      #?
 }
 
 function activate_utmctl (){ 
@@ -148,21 +144,19 @@ function launch_VMcopy (){
 
 function share_screen (){
     open vnc://${user}:${password}@$hostname       # vnc://[user]:[password]@[server]:[port]     #port not required? (port=5900 ?)
-}       ### Man muss sich dann noch in der VM einloggen -> noch kein command dafür gefunden
+}       ### Man muss sich dann noch in der VM einloggen
 
 
 #   script    #
 #create_folder_structure        #funktioniert
 
-start_apachectl        #funktioniert aber grosser output
+#start_apachectl        #funktioniert aber grosser output
 
-changeto_munki_dev_repo        #funktioniert
+#changeto_munki_dev_repo        #funktioniert
 
-update_repo        #funktioniert
+#update_repo        #funktioniert
 
-#adjust_autopkg     #manuell, einmalig?
-
-#adjust_munki       #manuell, eimalig?
+#adjust_autopkg     #manuell?
 
 #activate_utmctl        #funktioniert
 
@@ -178,11 +172,11 @@ clone_templateVM        #funktioniert
 
 launch_VMcopy       #funktioniert
 
-share_screen        #funktionierte -> bug
+share_screen        #funktionierte -> bug wenn JAMF enrollt ist
 
 
 echo "$hostname"
 echo "$name"
 echo "$user"
-echo "$ip_adress"
+echo "$ip_address"
 echo "Script completed."
