@@ -20,14 +20,15 @@
 
 
 #   variables   #
-name="test"
-user="test"
-password="test"
+name="nojamf"
+user="nojamf"
+password="nojamf"
 language="en"                                   #different hostname pattern for different languages!    #Options: en / de
 clone_suffix="clone"
 suffix=$clone_suffix
 hostname="${name}s-Virtual-Machine.local"
-ip_address="192.168.64.12"
+ip_address_test="192.168.64.13"
+ip_address_nojamf="192.168.64.15"
 
 ###
 #if [ $language=="en" ]
@@ -58,7 +59,7 @@ function create_folder_structure (){
 }
 
 function start_apachectl (){
-    launchctl print system/org.apache.httpd 
+    launchctl print system/org.apache.httpd &> /dev/null
 
     if [ $? -eq 0 ]
     then
@@ -66,6 +67,11 @@ function start_apachectl (){
     else 
         sudo apachectl start
     fi
+}
+
+function adjust_autopkg (){
+    /usr/local/bin/autopkg run --key MUNKI_REPO=“/Volumes/MUNKI_PROD“      #?
+    #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
 }
 
 function changeto_munki_dev_repo (){ 
@@ -85,17 +91,13 @@ function update_repo (){
     sleep .5
 }
 
-function adjust_autopkg (){
-    /usr/local/bin/autopkg run --key MUNKI_REPO=“/Volumes/MUNKI_PROD“      #?
-}
-
 function activate_utmctl (){ 
     #/Applications/UTM.app/Contents/MacOS/utmctl
     sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
 }
 
 function open_utm(){
-    if ps -A | grep -v grep | grep -iq 'utm.app'
+    if ps -A | grep -v grep | grep -iq 'utm.app' 
     then 
         sleep .2
     else 
@@ -123,7 +125,7 @@ function delete_VMcopy (){
 }
 
 function check_delete_existing_VMcopy (){  
-    while ( utmctl list | grep ${name}_${suffix} )
+    while ( utmctl list | grep ${name}_${suffix} )  
     do
         if [ $? -eq 0 ]
         then
@@ -138,35 +140,35 @@ function clone_templateVM (){
 }
 
 function launch_VMcopy (){
-   utmctl start ${name}_${suffix}
+    utmctl start ${name}_${suffix}
     sleep .25
 }
 
 function share_screen (){
     open vnc://${user}:${password}@$hostname       # vnc://[user]:[password]@[server]:[port]     #port not required? (port=5900 ?)
-}       ### Man muss sich dann noch in der VM einloggen
+}       ### Man muss sich dann noch in der VM einloggen     #jamf enrollement muss angepasst werden
 
 
-#   script    #
-#create_folder_structure        #funktioniert
+#   script   #
+create_folder_structure 2> /dev/null        #funktioniert
 
-#start_apachectl        #funktioniert aber grosser output
-
-#changeto_munki_dev_repo        #funktioniert
-
-#update_repo        #funktioniert
+start_apachectl        #funktioniert
 
 #adjust_autopkg     #manuell?
 
-#activate_utmctl        #funktioniert
+changeto_munki_dev_repo        #funktioniert
+
+update_repo > /dev/null     #funktioniert
+
+activate_utmctl        #funktioniert
 
 open_utm        #funktioniert
 
-stop_templateVM     #funktioniert
+stop_templateVM &> /dev/null        #funktioniert
 
 #delete_VMcopy      #funktioniert in check_delete_existing_VMcopy
 
-check_delete_existing_VMcopy        #funktioniert
+check_delete_existing_VMcopy &> /dev/null       #funktioniert
 
 clone_templateVM        #funktioniert
 
@@ -175,8 +177,11 @@ launch_VMcopy       #funktioniert
 share_screen        #funktionierte -> bug wenn JAMF enrollt ist
 
 
-echo "$hostname"
-echo "$name"
-echo "$user"
-echo "$ip_address"
+#   testing   #
+#echo "Hostname: $hostname"
+#echo "Name: $name"
+#echo "Username: $user"
+#echo "Password: $password"
+#echo "IP Address test VM: $ip_address_test"
+#echo "IP Address nojamf VM: $ip_address_nojamf"
 echo "Script completed."
