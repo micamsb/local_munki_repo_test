@@ -23,24 +23,13 @@
 name="nojamf"
 user="nojamf"
 password="nojamf"
-language="en"                                   #different hostname pattern for different languages!    #Options: en / de
+language="en"                                   #different hostname pattern for different languages!
 clone_suffix="clone"
 suffix=$clone_suffix
-hostname="${name}s-Virtual-Machine.local"
+hostname="${name}s-Virtual-Machine.local"       #for ${language}=="en"
 ip_address_test="192.168.64.13"
 ip_address_nojamf="192.168.64.15"
 
-###
-#if [ $language=="en" ]
-#then    
-#    hostname="${name}s-Virtual-Machine.local"
-#fi
-#
-#if [ $language=="de" ]
-#then
-#    hostname="Virtuelle-Maschine-von-${name}.local"
-#fi
-###
 
 #   functions   #
 function create_folder_structure (){
@@ -69,7 +58,7 @@ function start_apachectl (){
     fi
 }
 
-function adjust_autopkg (){
+function adjust_autopkg (){     #work in progress
     /usr/local/bin/autopkg run --key MUNKI_REPO=“/Volumes/MUNKI_PROD“      #?
     #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
 }
@@ -145,36 +134,36 @@ function launch_VMcopy (){
 }
 
 function share_screen (){
-    open vnc://${user}:${password}@$hostname       # vnc://[user]:[password]@[server]:[port]     #port not required? (port=5900 ?)
+    open vnc://${user}:${password}@$hostname       # vnc://[user]:[password]@[server]:[port]
 }       ### Man muss sich dann noch in der VM einloggen     #jamf enrollement muss angepasst werden
 
 
 #   script   #
-create_folder_structure 2> /dev/null        #funktioniert
+create_folder_structure 2> /dev/null
 
-start_apachectl        #funktioniert
+start_apachectl
 
 #adjust_autopkg     #manuell?
 
-changeto_munki_dev_repo        #funktioniert
+changeto_munki_dev_repo
 
-update_repo > /dev/null     #funktioniert
+update_repo > /dev/null
 
-activate_utmctl        #funktioniert
+activate_utmctl
 
-open_utm        #funktioniert
+open_utm
 
-stop_templateVM &> /dev/null        #funktioniert
+stop_templateVM &> /dev/null
 
-#delete_VMcopy      #funktioniert in check_delete_existing_VMcopy
+#delete_VMcopy      #läuft in check_delete_existing_VMcopy
 
-check_delete_existing_VMcopy &> /dev/null       #funktioniert
+check_delete_existing_VMcopy &> /dev/null
 
-clone_templateVM        #funktioniert
+clone_templateVM
 
-launch_VMcopy       #funktioniert
+launch_VMcopy
 
-share_screen        #funktionierte -> bug wenn JAMF enrollt ist
+share_screen        # -> bug wenn JAMF enrollt ist
 
 
 #   testing   #
