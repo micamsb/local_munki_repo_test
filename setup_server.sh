@@ -11,8 +11,12 @@
     #Set language according to variable
     #Set username and password according to variable
     #Activate screen sharing permission at: System Settings > General > Sharing > Screen Sharing
+
+    ### ### ###
     #Open search machine and enroll JAMF with following link: https://its-mcs-dm.its.unibas.ch:8443/enroll/
         #Wait until completion & follow instructions if needed (also review the MDM Profile in System Settings > Profiles)
+    ### ### ###
+
 #Restart VM and follow instructions if needed
 #Copy the serial number (to create a Manifest in MunkiAdmin)
 
@@ -20,15 +24,13 @@
 
 
 #   variables   #
-name="nojamf"
-user="nojamf"
-password="nojamf"
+name="template"
+user="template"
+password="template"
 language="en"                                   #different hostname pattern for different languages!
 clone_suffix="clone"
 suffix=$clone_suffix
 hostname="${name}s-Virtual-Machine.local"       #for ${language}=="en"
-ip_address_test="192.168.64.13"
-ip_address_nojamf="192.168.64.15"
 
 
 #   functions   #
@@ -131,25 +133,26 @@ function clone_templateVM (){
 function launch_VMcopy (){
     utmctl start ${name}_${suffix}
     sleep .25
+    #open utm://sendText?${name}&text=${password}        #in VM einloggen; funktioniert nicht
 }
 
 function share_screen (){
     open vnc://${user}:${password}@$hostname       # vnc://[user]:[password]@[server]:[port]
-}       ### Man muss sich dann noch in der VM einloggen     #jamf enrollement muss angepasst werden
+}
 
 
 #   script   #
-create_folder_structure 2> /dev/null
+#create_folder_structure 2> /dev/null
 
 start_apachectl
 
 #adjust_autopkg     #manuell?
 
-changeto_munki_dev_repo
+#changeto_munki_dev_repo
 
-update_repo > /dev/null
+#update_repo > /dev/null
 
-activate_utmctl
+#activate_utmctl
 
 open_utm
 
@@ -163,7 +166,7 @@ clone_templateVM
 
 launch_VMcopy
 
-share_screen        # -> bug wenn JAMF enrollt ist
+share_screen        # -> bug wenn JAMF enrollt ist -> manuelles munki enrollment
 
 
 #   testing   #
@@ -171,6 +174,4 @@ share_screen        # -> bug wenn JAMF enrollt ist
 #echo "Name: $name"
 #echo "Username: $user"
 #echo "Password: $password"
-#echo "IP Address test VM: $ip_address_test"
-#echo "IP Address nojamf VM: $ip_address_nojamf"
 echo "Script completed."
