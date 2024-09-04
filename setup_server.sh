@@ -25,8 +25,8 @@
 
 #   variables   #
 name="template"
-user="template"
-password="template"
+user=$name
+password=$name
 language="en"                                   #different hostname pattern for different languages!
 clone_suffix="clone"
 suffix=$clone_suffix
@@ -52,8 +52,7 @@ function create_folder_structure (){
 function start_apachectl (){
     launchctl print system/org.apache.httpd &> /dev/null
 
-    if [ $? -eq 0 ]
-    then
+    if [ $? -eq 0 ]; then
         sleep .2
     else 
         sudo apachectl start
@@ -88,8 +87,7 @@ function activate_utmctl (){
 }
 
 function open_utm(){
-    if ps -A | grep -v grep | grep -iq 'utm.app' 
-    then 
+    if ps -A | grep -v grep | grep -iq 'utm.app'; then      #checking if utm is on
         sleep .2
     else 
         open /Applications/UTM.app/
@@ -98,16 +96,14 @@ function open_utm(){
 }
 
 function stop_templateVM (){
-    if [[ $(utmctl status $name)=="started" ]]
-    then
+    if [[ $(utmctl status $name)=="started" ]]; then        #checking if template is running
         utmctl stop $name
         sleep .2
     fi
 }
 
 function delete_VMcopy (){
-    if [[ $(utmctl status ${name}_${suffix})=="started" ]]
-    then    
+    if [[ $(utmctl status ${name}_${suffix})=="started" ]]; then        #checking if copy is running  
         utmctl stop ${name}_${suffix}
         sleep .5
     fi
@@ -116,10 +112,8 @@ function delete_VMcopy (){
 }
 
 function check_delete_existing_VMcopy (){  
-    while ( utmctl list | grep ${name}_${suffix} )  
-    do
-        if [ $? -eq 0 ]
-        then
+    while ( utmctl list | grep ${name}_${suffix} ); do      #checking if copy already exists
+        if [ $? -eq 0 ]; then
             delete_VMcopy
         fi
     done
@@ -133,7 +127,6 @@ function clone_templateVM (){
 function launch_VMcopy (){
     utmctl start ${name}_${suffix}
     sleep .25
-    #open utm://sendText?${name}&text=${password}        #in VM einloggen; funktioniert nicht
 }
 
 function share_screen (){
