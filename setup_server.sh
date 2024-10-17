@@ -20,17 +20,17 @@
 #Restart VM and follow instructions if needed
 #Copy the serial number (to create a Manifest in MunkiAdmin)
 
-#You should be able to run this script (as long as UTM is installed).
+#You should be able to run this script as long as UTM is installed.
 
 
 #   variables   #
-name="template"
-user=$name
-password=$name
-language="en"                                   #different hostname pattern for different languages!
-clone_suffix="clone"
-suffix=$clone_suffix
-hostname="${name}s-Virtual-Machine.local"       #for ${language}=="en"
+NAME="template"
+USER=$NAME
+PASSWORD=$NAME
+LANGUAGE="en"                                                       #different hostname pattern for different languages!
+CLONE_SUFFIX="clone"
+    SUFFIX=$CLONE_SUFFIX
+HOSTNAME="${NAME}s-Virtual-Machine.local"                           #for ${LANGUAGE}=="en"
 
 
 #   functions   #
@@ -59,9 +59,12 @@ function start_apachectl (){
     fi
 }
 
-function adjust_autopkg (){     #work in progress
-    /usr/local/bin/autopkg run --key MUNKI_REPO=“/Volumes/MUNKI_PROD“      #?
-    #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
+function change_munki_repo_preferences (){
+    #if #server active; then                                            #funktion nur ausführen wenn der server aktiv ist?
+        MUNKI_PROD="files/html/munki_repo_prod"                         #abhängig von filestruktur des lokalen Servers? 
+        /usr/local/bin/autopkg run --key MUNKI_REPO=“/Volumes/MUNKI_PROD“   
+        #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
+    #fi
 }
 
 function changeto_munki_dev_repo (){ 
@@ -87,7 +90,7 @@ function activate_utmctl (){
 }
 
 function open_utm(){
-    if ps -A | grep -v grep | grep -iq 'utm.app'; then      #checking if utm is on
+    if ps -A | grep -v grep | grep -iq 'utm.app'; then              #check if utm is on
         sleep .2
     else 
         open /Applications/UTM.app/
@@ -96,23 +99,23 @@ function open_utm(){
 }
 
 function stop_templateVM (){
-    if [[ $(utmctl status $name)=="started" ]]; then        #checking if template is running
-        utmctl stop $name
+    if [[ $(utmctl status $NAME)=="started" ]]; then                #checks if template is running
+        utmctl stop $NAME
         sleep .2
     fi
 }
 
 function delete_VMcopy (){
-    if [[ $(utmctl status ${name}_${suffix})=="started" ]]; then        #checking if copy is running  
-        utmctl stop ${name}_${suffix}
+    if [[ $(utmctl status ${NAME}_${SUFFIX})=="started" ]]; then    #checks if copy is running  
+        utmctl stop ${NAME}_${SUFFIX}
         sleep .5
     fi
 
-    utmctl delete ${name}_${suffix}
+    utmctl delete ${NAME}_${SUFFIX}
 }
 
 function check_delete_existing_VMcopy (){  
-    while ( utmctl list | grep ${name}_${suffix} ); do      #checking if copy already exists
+    while ( utmctl list | grep ${NAME}_${SUFFIX} ); do              #checks if copy already exists
         if [ $? -eq 0 ]; then
             delete_VMcopy
         fi
@@ -120,51 +123,42 @@ function check_delete_existing_VMcopy (){
 }
 
 function clone_templateVM (){
-    utmctl clone $name --name ${name}_${suffix} 
+    utmctl clone $NAME --name ${NAME}_${SUFFIX} 
     sleep .2
 }
 
 function launch_VMcopy (){
-    utmctl start ${name}_${suffix}
+    utmctl start ${NAME}_${SUFFIX}
     sleep .25
 }
 
 function share_screen (){
-    open vnc://${user}:${password}@$hostname       # vnc://[user]:[password]@[server]:[port]
+    open vnc://${USER}:${PASSWORD}@$HOSTNAME                        # vnc://[user]:[password]@[server]:[port]
 }
 
+function revert_munki_repo_preferences (){
+    defaults write com.github.autopkg MUNKI_REPO /volumes/files/html/munki_repo_dev
+}
 
 #   script   #
 #create_folder_structure 2> /dev/null
-
-start_apachectl
-
-#adjust_autopkg     #manuell?
-
+#start_apachectl
+#change_munki_repo_preferences                                      #manuell?
 #changeto_munki_dev_repo
-
 #update_repo > /dev/null
-
 #activate_utmctl
-
 open_utm
-
 stop_templateVM &> /dev/null
-
-#delete_VMcopy      #läuft in check_delete_existing_VMcopy
-
+#delete_VMcopy                                                      #läuft in check_delete_existing_VMcopy
 check_delete_existing_VMcopy &> /dev/null
-
 clone_templateVM
-
 launch_VMcopy
-
-share_screen        # -> bug wenn JAMF enrollt ist -> manuelles munki enrollment
-
+share_screen                                                        # -> bug wenn JAMF enrollt ist -> manuelles munki enrollment
+#revert_munki_repo_preferences                                      # setzt die munki änderungen zurück (separates skript?)
 
 #   testing   #
-#echo "Hostname: $hostname"
-#echo "Name: $name"
-#echo "Username: $user"
-#echo "Password: $password"
+#echo "Hostname: $HOSTNAME"
+#echo "Name: $NAME"
+#echo "Username: $USER"
+#echo "Password: $PASSWORD"
 echo "Script completed."
