@@ -60,11 +60,14 @@ function start_apachectl (){
 }
 
 function change_munki_repo_preferences (){
-    #if #server active; then                                            #funktion nur ausführen wenn der server aktiv ist?
-        MUNKI_PROD="files/html/munki_repo_prod"                         #abhängig von filestruktur des lokalen Servers? 
-        /usr/local/bin/autopkg run --key MUNKI_REPO=“/Volumes/MUNKI_PROD“   
+    launchctl print system/org.apache.httpd &> /dev/null
+
+    if [ $? -eq 0 ]; then                                               #funktion nur ausführen wenn der server aktiv ist
+        /usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT        #?
         #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
-    #fi
+    else
+        /usr/local/bin/autopkg run --key MUNKI_REPO="/Volumes/files/html/munki_repo_dev"
+    fi 
 }
 
 function changeto_munki_dev_repo (){ 
