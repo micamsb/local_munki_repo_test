@@ -62,11 +62,11 @@ function start_apachectl (){
 function change_munki_repo_preferences (){
     launchctl print system/org.apache.httpd &> /dev/null
 
-    if [ $? -eq 0 ]; then                                               #funktion nur ausführen wenn der server aktiv ist
-        /usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT        #?
+    if [ $? -eq 0 ]; then                                                       #funktion nur ausführen wenn der server aktiv ist
+        /usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT &> /dev/null   #?
         #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
     else
-        /usr/local/bin/autopkg run --key MUNKI_REPO="/Volumes/files/html/munki_repo_dev"
+        /usr/local/bin/autopkg run --key MUNKI_REPO="/Volumes/files/html/munki_repo_dev" &> /dev/null
     fi 
 }
 
@@ -140,24 +140,24 @@ function share_screen (){
 }
 
 function revert_munki_repo_preferences (){
-    defaults write com.github.autopkg MUNKI_REPO /volumes/files/html/munki_repo_dev
+    defaults write com.github.autopkg MUNKI_REPO /volumes/files/html/munki_repo_dev &> /dev/null
 }
 
 #   script   #
 #create_folder_structure 2> /dev/null
-#start_apachectl
-#change_munki_repo_preferences                                      #manuell?
-#changeto_munki_dev_repo
+start_apachectl
+change_munki_repo_preferences                                      #manuell?
+changeto_munki_dev_repo
 #update_repo > /dev/null
 #activate_utmctl
 open_utm
 stop_templateVM &> /dev/null
-#delete_VMcopy                                                      #läuft in check_delete_existing_VMcopy
+###delete_VMcopy &> /dev/null                                                  #läuft in check_delete_existing_VMcopy
 check_delete_existing_VMcopy &> /dev/null
-clone_templateVM
+clone_templateVM 
 launch_VMcopy
-share_screen                                                        # -> bug wenn JAMF enrollt ist -> manuelles munki enrollment
-#revert_munki_repo_preferences                                      # setzt die munki änderungen zurück (separates skript?)
+#share_screen                                                        # -> bug wenn JAMF enrollt ist -> manuelles munki enrollment
+revert_munki_repo_preferences                                      # setzt die munki änderungen zurück (separates skript?)
 
 #   testing   #
 #echo "Hostname: $HOSTNAME"
