@@ -1,8 +1,5 @@
 #!/bin/zsh --no-rcs
 
-#creates a folder structure; connects to the dev repo; clones a VM from template and starts it
-
-
 #   Set up template   #
 #New UTM VM with name according to variable
 #Press command k in finder window and connect to: dav.its-cs-munki-test-01.its.unibas.ch/files/
@@ -11,13 +8,7 @@
     #Set language according to variable
     #Set username and password according to variable
     #Activate screen sharing permission at: System Settings > General > Sharing > Screen Sharing
-
-    ### ### ###
-    #Open search machine and enroll JAMF with following link: https://its-mcs-dm.its.unibas.ch:8443/enroll/
-        #Wait until completion & follow instructions if needed (also review the MDM Profile in System Settings > Profiles)
-    ### ### ###
-
-#Restart VM and follow instructions if needed
+    #Maually enroll Munki (bug with screen sharing when enrolled with jamf)
 #Copy the serial number (to create a Manifest in MunkiAdmin)
 
 #You should be able to run this script as long as UTM is installed.
@@ -34,21 +25,6 @@ HOSTNAME="${NAME}s-Virtual-Machine.local"                           #for ${LANGU
 
 
 #   functions   #
-function create_folder_structure (){
-    SERVER_ROOT=/Users/Shared/munki_repo
-
-    mkdir $SERVER_ROOT
-    mkdir $SERVER_ROOT/catalogs
-    mkdir $SERVER_ROOT/icons
-    mkdir $SERVER_ROOT/manifests
-    mkdir $SERVER_ROOT/pkgs
-    mkdir $SERVER_ROOT/pkgsinfo
-
-    chmod -R a+rX $SERVER_ROOT
-
-    sudo ln -s $SERVER_ROOT /Library/WebServer/Documents/
-}
-
 function start_apachectl (){
     launchctl print system/org.apache.httpd &> /dev/null
 
@@ -57,17 +33,6 @@ function start_apachectl (){
     else 
         sudo apachectl start
     fi
-}
-
-function change_munki_repo_preferences (){
-    launchctl print system/org.apache.httpd &> /dev/null
-
-    if [ $? -eq 0 ]; then                                                       #funktion nur ausführen wenn der server aktiv ist
-        /usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT &> /dev/null   #?
-        #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
-    else
-        /usr/local/bin/autopkg run --key MUNKI_REPO="/Volumes/files/html/munki_repo_dev" &> /dev/null
-    fi 
 }
 
 function changeto_munki_dev_repo (){ 
@@ -82,14 +47,18 @@ function changeto_munki_dev_repo (){
     "https://its-cs-munki-test-01.its.unibas.ch/munki_repo_dev"
 }
 
+function change_munki_repo_preferences (){
+        launchctl print system/org.apache.httpd &> /dev/null
+
+    if [ $? -eq 0 ]; then                                                       #checks if server is running
+        /usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT &> /dev/null   #?
+        #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
+    fi
+}
+
 function update_repo (){
     autopkg repo-update all
     sleep .5
-}
-
-function activate_utmctl (){ 
-    #/Applications/UTM.app/Contents/MacOS/utmctl
-    sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
 }
 
 function open_utm(){
@@ -143,25 +112,24 @@ function revert_munki_repo_preferences (){
     defaults write com.github.autopkg MUNKI_REPO /volumes/files/html/munki_repo_dev &> /dev/null
 }
 
+
 #   script   #
-#create_folder_structure 2> /dev/null
-start_apachectl
-change_munki_repo_preferences                                      #manuell?
+start_apachectl                                   
 changeto_munki_dev_repo
-#update_repo > /dev/null
-#activate_utmctl
+change_munki_repo_preferences 
+update_repo > /dev/null
 open_utm
 stop_templateVM &> /dev/null
 ###delete_VMcopy &> /dev/null                                                  #läuft in check_delete_existing_VMcopy
 check_delete_existing_VMcopy &> /dev/null
 clone_templateVM 
 launch_VMcopy
-#share_screen                                                        # -> bug wenn JAMF enrollt ist -> manuelles munki enrollment
-revert_munki_repo_preferences                                      # setzt die munki änderungen zurück (separates skript?)
+share_screen                                                                    # -> bug wenn JAMF enrollt ist -> manuelles munki enrollment
+
 
 #   testing   #
 #echo "Hostname: $HOSTNAME"
 #echo "Name: $NAME"
 #echo "Username: $USER"
 #echo "Password: $PASSWORD"
-echo "Script completed."
+echo "Script setup_server completed."
