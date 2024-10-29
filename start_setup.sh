@@ -4,6 +4,7 @@
 # Runs once
 # UTM has to be installed
 
+
 #   functions   #
 function create_folder_structure (){
     SERVER_ROOT=/Users/Shared/munki_repo
