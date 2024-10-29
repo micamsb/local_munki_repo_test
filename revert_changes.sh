@@ -5,11 +5,11 @@
 
 #   functions   #
 function revert_munki_repo_preferences (){
-    defaults write com.github.autopkg MUNKI_REPO /volumes/files/html/munki_repo_dev &> /dev/null
+    defaults write com.github.autopkg MUNKI_REPO /volumes/files/html/munki_repo_dev
 }
 
 #   script   #
-revert_munki_repo_preferences 
+revert_munki_repo_preferences &> /dev/null
 
 
 #   testing   #
