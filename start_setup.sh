@@ -2,6 +2,7 @@
 
 # Script creates folder structure and activates utmctl
 # Runs once
+# UTM has to be installed
 
 #   functions   #
 function create_folder_structure (){
@@ -20,13 +21,13 @@ function create_folder_structure (){
 }
 
 function activate_utmctl (){ 
-    #/Applications/UTM.app/Contents/MacOS/utmctl
+    #/Applications/UTM.app/Contents/MacOS/utmctl &> /dev/null
     sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
 }
 
 
 #   script   #
-create_folder_structure 2> /dev/null
+create_folder_structure &> /dev/null
 activate_utmctl
 
 
