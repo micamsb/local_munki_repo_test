@@ -52,8 +52,8 @@ function change_munki_repo_preferences (){
         launchctl print system/org.apache.httpd &> /dev/null
 
     if [ $? -eq 0 ]; then                                                       # checks if server is running
-        /usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT &> /dev/null
-        #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
+        #/usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT &> /dev/null
+        defaults write com.github.autopkg MUNKI_REPO $SERVER_ROOT
     fi
 }
 
