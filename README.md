@@ -15,4 +15,5 @@ Automate the configuration of a local munki repo needed for an munki application
 * The name, language, and password of the template must match the variables in the *setup_server.sh* script.
 * Configure the shared directory in UTM (under "New Shared Directory") to connect the local _/Users/Shared_ directory with the VM.
 * Enable screen sharing at _System Settings > General > Sharing > Screen Sharing_ to ensure a working VNC connection.
+* Install Munki: https://github.com/munki/munki/releases
 * Copy the serial number of the VM to create a Manifest.
