@@ -1,17 +1,6 @@
 #!/bin/zsh --no-rcs
 
-#   Set up template   #
-#New UTM VM with name according to variable
-#Press command k in finder window and connect to: dav.its-cs-munki-test-01.its.unibas.ch/files/
-#Press "New Shared Directory" in UTM and choose: dav.its-cs-munki-test-01.its.unibas.ch/files/html/munki_repo_dev
-#Start VM
-    #Set language according to variable
-    #Set username and password according to variable
-    #Activate screen sharing permission at: System Settings > General > Sharing > Screen Sharing
-    #Maually enroll Munki (bug with screen sharing when enrolled with jamf)
-#Copy the serial number (to create a Manifest in MunkiAdmin)
-
-#You should be able to run this script as long as UTM is installed.
+# To use this script a UTM VM has to be sat up as a template.
 
 
 #   variables   #
@@ -52,8 +41,8 @@ function change_munki_repo_preferences (){
         launchctl print system/org.apache.httpd &> /dev/null
 
     if [ $? -eq 0 ]; then                                                       # checks if server is running
-        /usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT &> /dev/null
-        #defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
+        #/usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT &> /dev/null
+        defaults write com.github.autopkg MUNKI_REPO $SERVER_ROOT
     fi
 }
 
@@ -102,7 +91,7 @@ function clone_templateVM (){                                                   
 
 function launch_VMcopy (){                                                      # launches copy
     utmctl start ${NAME}_${SUFFIX}
-    sleep .25
+    sleep .50
 }
 
 function share_screen (){                                                       # starts screen sharing
