@@ -1,20 +1,56 @@
 #!/bin/zsh --no-rcs
 
-# To use this script a UTM VM has to be sat up as a template.
+# To use this script, a UTM VM has to be set up as a template.
 
 
 #   variables   #
-NAME="template"
-USER=$NAME
-PASSWORD=$NAME
-LANGUAGE="en"                                                                   # different hostname pattern for different languages!
-CLONE_SUFFIX="clone"
-    SUFFIX=$CLONE_SUFFIX
-HOSTNAME="${NAME}s-Virtual-Machine.local"                                       # for ${LANGUAGE}=="en"
-SERVER_ROOT=/Users/Shared/munki_repo
+function user_input_variables (){
+    echo "Name of the template VM (Press ENTER for 'template' as NAME):"
+    read -r NAME
+    echo
+    if [ -z "$NAME" ]; then
+        NAME="template"
+    fi
+
+    echo "Password of the template VM (Press ENTER if NAME = PASSWORD):"
+    read -r -s PASSWORD
+    echo
+    if [ -z "$PASSWORD" ]; then
+        PASSWORD="$NAME"
+    fi
+
+    LANGUAGE="en"                                                                   # different hostname pattern for different languages!
+    SUFFIX="clone"
+    HOSTNAME="${NAME}s-Virtual-Machine.local"                                       # for ${LANGUAGE}=="en"
+    SERVER_ROOT=/Users/Shared/munki_repo
+}
 
 
 #   functions   #
+function create_folder_structure (){
+    if [ ! -d $SERVER_ROOT ]; then
+        mkdir $SERVER_ROOT
+        mkdir $SERVER_ROOT/catalogs
+        mkdir $SERVER_ROOT/icons
+        mkdir $SERVER_ROOT/manifests
+        mkdir $SERVER_ROOT/pkgs
+        mkdir $SERVER_ROOT/pkgsinfo
+
+        chmod -R a+rX $SERVER_ROOT
+
+        sudo ln -s $SERVER_ROOT /Library/WebServer/Documents/
+        echo "Creating Directory:" $SERVER_ROOT
+    fi
+}
+
+function activate_utmctl (){ 
+    if [ ! -L /usr/local/bin/utmctl ]; then
+        #/Applications/UTM.app/Contents/MacOS/utmctl &> /dev/null
+        sudo ln -sf /Applications/UTM.app/Contents/MacOS/utmctl /usr/local/bin/utmctl
+        echo "Creating a symbolic link for utmctl."
+    fi
+}
+
 function start_apachectl (){                                                    # starts apachectl server
     launchctl print system/org.apache.httpd &> /dev/null
 
@@ -25,20 +61,8 @@ function start_apachectl (){                                                    
     fi
 }
 
-function changeto_munki_dev_repo (){                                            # switches to development repository
-    sudo defaults write \
-    /Library/Preferences/ManagedInstalls.plist \
-    ManifestURL \
-    "https://its-cs-munki-test-01.its.unibas.ch/munki_repo_dev/manifests/ITS" \
-    && \
-    sudo defaults write \
-    /Library/Preferences/ManagedInstalls.plist \
-    SoftwareRepoURL \
-    "https://its-cs-munki-test-01.its.unibas.ch/munki_repo_dev"
-}
-
-function change_munki_repo_preferences (){
-        launchctl print system/org.apache.httpd &> /dev/null
+function autopkg_change_munki_repo_preferences (){
+    launchctl print system/org.apache.httpd &> /dev/null
 
     if [ $? -eq 0 ]; then                                                       # checks if server is running
         #/usr/local/bin/autopkg run --key MUNKI_REPO=$SERVER_ROOT &> /dev/null
@@ -95,14 +119,16 @@ function launch_VMcopy (){                                                      
 }
 
 function share_screen (){                                                       # starts screen sharing
-    open vnc://${USER}:${PASSWORD}@$HOSTNAME                                    # (vnc://[user]:[password]@[server]:[port])
+    open vnc://${NAME}:${PASSWORD}@$HOSTNAME                                    # (vnc://[user]:[password]@[server]:[port])
 }
 
 
 #   script   #
+user_input_variables
+create_folder_structure
+activate_utmctl
 start_apachectl                                   
-changeto_munki_dev_repo
-change_munki_repo_preferences 
+autopkg_change_munki_repo_preferences 
 update_repo &> /dev/null
 open_utm
 stop_templateVM &> /dev/null
@@ -114,8 +140,7 @@ share_screen                                                                    
 
 
 #   testing   #
-#echo "Hostname: $HOSTNAME"
 #echo "Name: $NAME"
-#echo "Username: $USER"
 #echo "Password: $PASSWORD"
-echo "Script setup_server completed."
+#echo "Hostname: $HOSTNAME"
+echo "Script server_setup completed."

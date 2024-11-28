@@ -1,11 +1,11 @@
 #!/bin/zsh --no--rcs
 
-# Script reverts the changes of munki repository preference made for the local munki server workflow
+# Script reverts the changes made in the setup_server.sh script.
 
 
 #   functions   #
 function stop_apachectl (){                                                    # stops apachectl server
-    launchctl print system/org.apache.httpd &> /dev/null
+    launchctl print system/org.apache.httpd
 
     if [ $? -eq 1 ]; then
         sleep .2
@@ -14,13 +14,13 @@ function stop_apachectl (){                                                    #
     fi
 }
 
-function revert_munki_repo_preferences (){
-    defaults write com.github.autopkg MUNKI_REPO /volumes/files/html/munki_repo_dev
+function autopkg_revert_munki_repo_preferences (){
+    defaults write com.github.autopkg MUNKI_REPO /Volumes/files/html/munki_repo_dev
 }
 
 #   script   #
-stop_apachectl
-revert_munki_repo_preferences &> /dev/null
+stop_apachectl &> /dev/null
+autopkg_revert_munki_repo_preferences &> /dev/null
 
 
 #   testing   #
